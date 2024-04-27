@@ -5,11 +5,13 @@
   padding: 0;
   box-sizing: border-box;
 }
-
 html {
   font-size: 62.5%;
 }
-
+::-webkit-scrollbar {
+  width: 0px;
+  background: transparent;
+}
 body {
   font-size: 2.4rem;
   font-family: sans-serif;
@@ -17,6 +19,7 @@ body {
   font-family: "Quicksand";
   font-weight: 500;
 }
+
 
 .app {
   width: 100%;
