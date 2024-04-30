@@ -28,15 +28,15 @@ body {
   grid-template-rows: auto auto 1fr auto;
 }
 
-h1 {
+.header {
   text-align: center;
   background-color: #f4a226;
-  font-family: "Monoton";
-  font-size: 8rem;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 5rem;
   text-transform: uppercase;
-  font-weight: 400;
+  font-weight: 600;
   word-spacing: 30px;
-  letter-spacing: -5px;
+  letter-spacing: 5px;
   padding: 2.4rem 0;
 }
 

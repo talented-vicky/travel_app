@@ -1,32 +1,60 @@
 import { useState } from "react";
 
-const initItems = [
-  {
-    id: 1, desc: "passports", qty: 2, packed: false
-  },
-  {
-    id: 2, desc: "socks", qty: 12, packed: true
-  },
-  {
-    id: 3, desc: "wallet", qty: 3, packed: false
-  },
-]
+// const initItems = [
+//   {
+//     id: 1, desc: "passports", qty: 2, packed: false
+//   },
+//   {
+//     id: 2, desc: "socks", qty: 12, packed: true
+//   },
+//   {
+//     id: 3, desc: "wallet", qty: 3, packed: false
+//   },
+// ]
 
 export default function App() {
+  const [items, setItems] = useState([]);
+  
+  function handleInsertItem (item){
+    setItems(existingItem => [...existingItem, item]);
+    // setItems(existingItem => existingItem.push(item));
+    // above won't work cause state can't undergo mutation, hence
+    // the need for immuatable data edit
+  }
+  function handleDeleteItem (id){
+    setItems(existingItem => existingItem.filter(data => data.id !== id))
+  }
+
+  function handleCheckbox (id){
+    setItems(existingItem => existingItem.map(data => data.id === id ?
+      {
+        ...data,
+        packed: !data.packed
+      }
+      : data
+    ))
+  }
+
   return (
     <div className="app">
       <Header></Header>
-      <Form></Form>
-      <PackList></PackList>
-      <Footer></Footer>
+      <Form onInsertItem={handleInsertItem}></Form>
+      <PackList 
+        items={items} 
+        onDeleteItem={handleDeleteItem}
+        onCheckbox={handleCheckbox}
+        >
+      </PackList>
+      <Footer items={items}></Footer>
     </div>
   )
 }
 
 function Header() {
-  return <div>🌴 Far away 👜 </div>
+  return <h1 className="header">🌴 Far away 👜 </h1>
 }
-function Form() {
+
+function Form({onInsertItem}) {
   const [desc, setDesc] = useState("");
   // using controlled elements (i.e giving react control of the element over the DOM)
   // 1 - defining a state
@@ -34,17 +62,12 @@ function Form() {
 
   function submitForm(e) {
     e.preventDefault();
-    if(desc === ""){
-      return;
-    }
-    const newItem = {
-      id: Date.now(), 
-      qty, desc, 
-      packed: false
-    }
-    console.log(newItem);
+
+    if(desc === ""){ return; }
+    const newItem = { id: Date.now(), qty, desc, packed: false }
+    onInsertItem(newItem);
+
     setDesc(""); setQty(3);
-    // initItems.push(newItem);
   }
 
   return (
@@ -53,7 +76,7 @@ function Form() {
       <select
         value={qty} 
         // 2- force form tag (select) to always take the init state value
-        onChange={e => setQty(e.target.value)}
+        onChange={e => setQty(Number(e.target.value))}
         // 3- update the select state using the onchange property
       >
         {
@@ -76,30 +99,78 @@ function Form() {
     </form >
   )
 }
-function PackList() {
-  return (
-    <div className="list">
-      <ul>
-        {initItems.map(data => 
-          <Item item={data} key={data.id}/>
-        )}
-      </ul>
-    </div>
-  )
-}
-function Item({item}) {
+
+function Item({item, onDeleteItem, onCheckbox}) {
+  
   return <li>
+      <input 
+        type="checkbox" 
+        value={item.packed}
+        onChange={() => onCheckbox(item.id)}
+      >
+      </input>
       <span 
         style={{textDecoration: item.packed? "line-through" : ""}} > 
         {item.qty} {item.desc} 
       </span>
-      <button> ❌ </button>
+      <button onClick={onDeleteItem}> ❌ </button>
     </li>
 }
-function Footer() {
+
+function PackList({items, onDeleteItem, onCheckbox}) {
+  return (
+    <div className="list">
+      <ul>
+        {items.map(data => 
+          <Item 
+            item={data} key={data.id} 
+            onDeleteItem={() => onDeleteItem(data.id)}
+            onCheckbox={onCheckbox}
+          />
+        )}
+      </ul>
+      <div>
+        <select>
+          <option value={1}> sort by input order </option>
+          <option value={2}> sort by description </option>
+          <option value={3}> sort by packed status </option>
+        </select>
+        <button 
+          // onClick={}
+        > clear list </button>
+      </div>
+    </div>
+  )
+}
+
+function Footer({items}) {
+  const totalItems = items.length;
+  const packedItems = items.filter(item => item.packed).length
+  const percentagePacked = Math.round((packedItems / totalItems) * 100)
+
   return (
     <footer className="stats">
-      <em> You have {initItems.length} items from list </em>
+      {
+        !totalItems ? <em> Nothing packed yet, start adding items </em>
+        : <em> 
+          {
+            percentagePacked === 100 ? `Done packing! ✈`
+            : `You have ${items.length} item(s) on your list 😎, and have packed ${packedItems} (${totalItems !== 0 ? percentagePacked : 0 }%)`
+          }
+        </em>
+      }
     </footer>
+    // <footer className="stats">
+    //   <em> You have {items.length} items on your list, and havepacked {
+    //     items.filter(item => item.packed === true).reduce((cumm, item) => cumm + item.qty, 0)
+    //   } ({
+    //     totalItems !== 0 ?
+    //     Math.round((items.filter(item => item.packed === true).reduce((cumm, item) => cumm + item.qty, 0)
+    //     /
+    //     items.reduce((cumm, item) => cumm + item.qty, 0)) * 100).toFixed(2)
+    //     : 0
+    //   }%) 
+    //   </em>
+    // </footer>
   )
 }
