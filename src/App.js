@@ -1,38 +1,34 @@
 import { useState } from "react";
 
-// const initItems = [
-//   {
-//     id: 1, desc: "passports", qty: 2, packed: false
-//   },
-//   {
-//     id: 2, desc: "socks", qty: 12, packed: true
-//   },
-//   {
-//     id: 3, desc: "wallet", qty: 3, packed: false
-//   },
-// ]
-
 export default function App() {
   const [items, setItems] = useState([]);
   
   function handleInsertItem (item){
-    setItems(existingItem => [...existingItem, item]);
+    setItems(existingItems => [...existingItems, item]);
     // setItems(existingItem => existingItem.push(item));
     // above won't work cause state can't undergo mutation, hence
     // the need for immuatable data edit
   }
+
   function handleDeleteItem (id){
-    setItems(existingItem => existingItem.filter(data => data.id !== id))
+    setItems(existingItems => existingItems.filter(data => data.id !== id))
   }
 
   function handleCheckbox (id){
-    setItems(existingItem => existingItem.map(data => data.id === id ?
+    setItems(existingItems => existingItems.map(data => data.id === id ?
       {
         ...data,
         packed: !data.packed
       }
       : data
     ))
+  }
+
+  function handleClearList(){
+    const userResponse = window.confirm("are you sure")
+    if(userResponse)
+    // setItems(items.filter(item => !item))
+    setItems([])
   }
 
   return (
@@ -43,6 +39,7 @@ export default function App() {
         items={items} 
         onDeleteItem={handleDeleteItem}
         onCheckbox={handleCheckbox}
+        onClearList={handleClearList}
         >
       </PackList>
       <Footer items={items}></Footer>
@@ -58,16 +55,16 @@ function Form({onInsertItem}) {
   const [desc, setDesc] = useState("");
   // using controlled elements (i.e giving react control of the element over the DOM)
   // 1 - defining a state
-  const [qty, setQty] = useState(3);
+  const [qty, setQty] = useState(1);
 
   function submitForm(e) {
     e.preventDefault();
 
-    if(desc === ""){ return; }
+    if(desc === "") return;
     const newItem = { id: Date.now(), qty, desc, packed: false }
     onInsertItem(newItem);
 
-    setDesc(""); setQty(3);
+    setDesc(""); setQty(1);
   }
 
   return (
@@ -117,11 +114,24 @@ function Item({item, onDeleteItem, onCheckbox}) {
     </li>
 }
 
-function PackList({items, onDeleteItem, onCheckbox}) {
+function PackList({items, onDeleteItem, onCheckbox, onClearList}) {
+  const [sort, setSort] = useState("input");
+
+  let sortedItems;
+  if(sort === "input") sortedItems = items;
+
+  else if(sort === "desc"){
+    sortedItems = items.slice().sort((first, sec) => first.desc.localeCompare(sec.desc))
+
+  } else if(sort === "status"){
+    sortedItems = items.slice().sort((first, sec) => -Number(first.packed) +Number(sec.packed))
+    // sort to show packed/true first
+  }
+
   return (
     <div className="list">
       <ul>
-        {items.map(data => 
+        {sortedItems.map(data => 
           <Item 
             item={data} key={data.id} 
             onDeleteItem={() => onDeleteItem(data.id)}
@@ -130,14 +140,15 @@ function PackList({items, onDeleteItem, onCheckbox}) {
         )}
       </ul>
       <div>
-        <select>
-          <option value={1}> sort by input order </option>
-          <option value={2}> sort by description </option>
-          <option value={3}> sort by packed status </option>
+        <select 
+          value={sort}
+          onChange={e => setSort(e.target.value)}
+        >
+          <option value={'input'} key={1}> sort by input order </option>
+          <option value={'desc'} key={2}> sort by description </option>
+          <option value={'status'} key={3}> sort by packed status </option>
         </select>
-        <button 
-          // onClick={}
-        > clear list </button>
+        <button onClick={onClearList}> clear list </button>
       </div>
     </div>
   )
@@ -160,17 +171,5 @@ function Footer({items}) {
         </em>
       }
     </footer>
-    // <footer className="stats">
-    //   <em> You have {items.length} items on your list, and havepacked {
-    //     items.filter(item => item.packed === true).reduce((cumm, item) => cumm + item.qty, 0)
-    //   } ({
-    //     totalItems !== 0 ?
-    //     Math.round((items.filter(item => item.packed === true).reduce((cumm, item) => cumm + item.qty, 0)
-    //     /
-    //     items.reduce((cumm, item) => cumm + item.qty, 0)) * 100).toFixed(2)
-    //     : 0
-    //   }%) 
-    //   </em>
-    // </footer>
   )
 }
